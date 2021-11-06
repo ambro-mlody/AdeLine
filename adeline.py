@@ -1,3 +1,4 @@
+import random
 import numpy as np
 
 
@@ -7,28 +8,45 @@ def fourier(x):
     return a
 
 
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+
 class Adeline(object):
 
-    def __init__(self, num_of_inputs, iterations=1000, learning_rate=0.5):
+    def __init__(self, num_of_inputs, iterations=1000, learning_rate=0.001, bias=False, sigm=False):
         self.num_of_inputs = num_of_inputs
         self.iterations = iterations
         self.learning_rate = learning_rate
         self.weights = np.random.random(2 * self.num_of_inputs)
-        self.errors = []  # wartosci funkcji kosztu +  jej wykres
+        self.w0 = np.random.random()
+        self.bias = bias
+        self.errors = []
+        self.sigm = sigm
 
     def train(self, training_x, training_y):
         for _ in range(self.iterations):
             e = 0
-            for x, y in zip(training_x, training_y):  # losowosc przykladow
+            z = zip(training_x, training_y)
+            for x, y in random.choices(list(z)):
+                x = np.concatenate([x, fourier(x)])
                 out = self.output(x)
-                x = np.array(x)
+                #self.learning_rate = (2 / (np.linalg.norm(x) ** 2)) / 2
                 self.weights += self.learning_rate * (y - out) * x
-                e[y] += (y - out) ** 2
+                if self.bias:
+                    self.w0 += self.learning_rate * (y - out)
+                e += (y - out) ** 2
             self.errors.append(e)
 
     def _activation(self, x):
-        return x
+        if self.sigm:
+            x = 0.8 * x + 0.1
+            return sigmoid(x)
+        else:
+            return x
 
     def output(self, x):
-        inp = np.concatenate([x, fourier(x)])
-        return self._activation(np.dot(self.weights, inp))
+        if self.bias:
+            return self._activation(np.dot(self.weights, x) + self.w0)
+        else:
+            return self._activation(np.dot(self.weights, x))

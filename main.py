@@ -5,9 +5,10 @@ import button
 import data
 import adeline
 import numpy as np
+import matplotlib.pyplot as plt
 
 py.init()
-size = (490, 550)
+size = (490, 670)
 window = py.display.set_mode(size)
 py.display.set_caption("AdeLine")
 
@@ -24,11 +25,12 @@ def number_clicked(self):
         i += 1
 
 
+canv_size = 63
 font = 34
 button_size = (40, 40)
 menu = []
 x = 6
-y = 461
+y = 581
 diff = 43
 position = (x, y)
 for i in range(5):
@@ -60,13 +62,13 @@ def to_2d():
         array.append(p.clicked)
 
     grid = np.array(array)
-    grid = grid.reshape((7, 7))
+    grid = grid.reshape((9, 7))
     return grid
 
 
 def color_canvas(grid):
-    grid = grid.reshape(49)
-    for i in range(0, 49):
+    grid = grid.reshape(canv_size)
+    for i in range(0, canv_size):
         canvas[i].clicked = grid[i]
         if grid[i] == 0:
             canvas[i].bg_color = "white"
@@ -137,11 +139,15 @@ def check_clicked(self):
     for pixel in canvas:
         x.append(pixel.clicked)
 
+    x = np.concatenate([x, adeline.fourier(x)])
+    _max = (0, 0)
     for i in range(10):
-        if perceptrons[i].output(x) == 1:
-            print(i)
-            output_screen.change_text(str(i))
-            break
+        print(perceptrons[i].output(x))
+        confidence = perceptrons[i].output(x)
+        if confidence > _max[1]:
+            _max = (i, confidence)
+
+    output_screen.change_text(str(_max[0]))
 
 
 position = (position[0] + diff_x, position[1] + diff)
@@ -149,11 +155,21 @@ menu.append(button.Button(position, button_size, "check", font, color="black", b
 position = (position[0], position[1] - diff)
 
 
+def learning_plot():
+    plt.ylabel("Error Value")
+    plt.xlabel("iteration")
+    for i in range(10):
+        plt.plot(perceptrons[i].errors[1:100])
+    plt.legend([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+    plt.show()
+
+
 def learn_clicked(self):
     for i in range(10):
         perceptrons[i].train(data.data, data.labels[i])
 
     print("done")
+    learning_plot()
 
 
 menu.append(button.Button(position, button_size, "learn", font, color="black", bg_color="gray", on_click=learn_clicked))
@@ -178,7 +194,7 @@ x = 30
 position = (x, 15)
 diff = 62
 canvas = []
-for i in range(1, 50):
+for i in range(1, canv_size + 1):
     canvas.append(button.Button(position, button_size, "", font, bg_color="white", on_click=pixel_clicked))
     position = (position[0] + diff, position[1])
     if i % 7 == 0:
@@ -186,7 +202,7 @@ for i in range(1, 50):
 
 perceptrons = []
 for i in range(10):
-    perceptrons.append(adeline.Adeline(49))
+    perceptrons.append(adeline.Adeline(canv_size, sigm=True))
 
 while True:
     window.fill((0, 0, 0))
