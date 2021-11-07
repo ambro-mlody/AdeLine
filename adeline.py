@@ -32,6 +32,7 @@ class Adeline(object):
                 x = np.concatenate([x, fourier(x)])
                 out = self.output(x)
                 #self.learning_rate = (2 / (np.linalg.norm(x) ** 2)) / 2
+                a = np.dot(self.weights, x)
                 self.weights += self.learning_rate * (y - out) * x
                 if self.bias:
                     self.w0 += self.learning_rate * (y - out)
